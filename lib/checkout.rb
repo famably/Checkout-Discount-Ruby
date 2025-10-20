@@ -1,6 +1,7 @@
 class Checkout
-  def initialize(prices)
+  def initialize(prices, discount_repository = DiscountRepository.new)
     @prices = prices
+    @discount_repository = discount_repository
     @basket = []
   end
 
@@ -20,14 +21,15 @@ class Checkout
 
   def rule_for(item)
     price = @prices.fetch(item)
-    case item
-    when :apple, :pear
+    type = @discount_repository.find_discount_for(item)
+    case type
+    when :two_for_one
       TwoForOneRule.new(price)
-    when :banana
+    when :half_price
       HalfPriceRule.new(price)
-    when :pineapple
+    when :first_half_price
       FirstHalfPriceRule.new(price)
-    when :mango
+    when :buy_three_get_one
       BuyThreeGetOneFreeRule.new(price)
     else
       NoOfferRule.new(price)
@@ -74,5 +76,21 @@ class BuyThreeGetOneFreeRule < PricingRule
     remainder = qty % 4
     payable_items = (groups_of_four * 3) + remainder
     price * payable_items
+  end
+end
+
+class DiscountRepository
+  def initialize
+    @discounts = {
+      apple: :two_for_one,
+      pear: :two_for_one,
+      banana: :half_price,
+      pineapple: :first_half_price,
+      mango: :buy_three_get_one
+    }
+  end
+
+  def find_discount_for(item)
+    @discounts[item]
   end
 end
