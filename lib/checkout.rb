@@ -27,6 +27,8 @@ class Checkout
       HalfPriceRule.new(price)
     when :pineapple
       FirstHalfPriceRule.new(price)
+    when :mango
+      BuyThreeGetOneFreeRule.new(price)
     else
       NoOfferRule.new(price)
     end
@@ -63,5 +65,14 @@ class FirstHalfPriceRule < PricingRule
   def calculate(qty)
     return 0 if qty.zero?
     (price / 2.0) + ((qty - 1) * price)
+  end
+end
+
+class BuyThreeGetOneFreeRule < PricingRule
+  def calculate(qty)
+    groups_of_four = qty / 4
+    remainder = qty % 4
+    payable_items = (groups_of_four * 3) + remainder
+    price * payable_items
   end
 end
